@@ -24,17 +24,27 @@ class ViewController: UIViewController {
         tableView.tableFooterView = UIView()
         configure()
     }
+    
+    override func viewDidAppear(_ animated: Bool) {
+        NotificationCenter.default.addObserver(self, selector: #selector(adjustForKeyboard(_:)), name: NSNotification.Name.UIKeyboardDidShow, object: nil)
+        NotificationCenter.default.addObserver(self, selector: #selector(adjustForKeyboard(_:)), name: NSNotification.Name.UIKeyboardWillHide, object: nil)
+    }
+    
+    override func viewDidDisappear(_ animated: Bool) {
+        NotificationCenter.default.removeObserver(self, name: NSNotification.Name.UIKeyboardDidShow, object: nil)
+        NotificationCenter.default.removeObserver(self, name: NSNotification.Name.UIKeyboardWillHide, object: nil)
+    }
 
     override func didReceiveMemoryWarning() {
         super.didReceiveMemoryWarning()
         // Dispose of any resources that can be recreated.
     }
-
     
     func configure(){
         configureFirstTextField()
         configure2ndTextField()
     }
+    
     func configureFirstTextField() {
         
         guard let cell = tableView.dequeueReusableCell(withIdentifier: "Cell") as? TableViewCell else {return}
@@ -73,6 +83,23 @@ class ViewController: UIViewController {
             return false
         }
         
+    }
+    
+    func adjustForKeyboard(_ notification: Notification) {
+        let userInfo = notification.userInfo!
+        
+        let keyboardScreenEndFrame = (userInfo[UIKeyboardFrameEndUserInfoKey] as! NSValue).cgRectValue
+        let keyboardViewEndFrame = view.convert(keyboardScreenEndFrame, from: view.window)
+        
+        tableView.isScrollEnabled = true
+        
+        if notification.name == NSNotification.Name.UIKeyboardWillHide {
+            tableView.contentInset = UIEdgeInsets.zero
+        } else {
+            tableView.contentInset = UIEdgeInsets(top: 0, left: 0, bottom: keyboardViewEndFrame.height, right: 0)
+        }
+        
+        tableView.scrollIndicatorInsets = tableView.contentInset
     }
 }
 
